@@ -7,15 +7,12 @@ path = require 'path'
 mkdirp = require 'mkdirp'
 # _s = require 'underscore.string'
 iconv = require 'iconv-lite'
-
+qidianUtil = require './qidianutil'
 
 class Qidian
-  constructor : (@bookId, @txtPath) ->
-    # rssNo = _s.pad Math.floor(bookId / 100), 6, '0'
-    # rssNo = rssNo.substring(0, 3) + '/' + rssNo.substring(3)http://image.qidian.com/books/1/1.jpg
+  constructor : (@bookId) ->
     @frontcover = "http://image.qidian.com/books/#{bookId}/#{bookId}.jpg"
     @url = "http://www.qidian.com/Book/#{bookId}.aspx"
-    # @rssUrl = "http://rss.qidian.com/#{rssNo}/#{bookId}.xml"
     @chapterInfoUrl = "http://read.qidian.com/BookReader/#{bookId}.aspx"
 
   getTopNovel : (type, pages, cbf) ->
@@ -52,70 +49,60 @@ class Qidian
 
   start : (cbf) ->
     self = @
-
-    getContent = (file, chapterInfo, cbf) ->
-      fs.exists file, (exists) ->
-        if exists
-          chapterInfo.download = true
-          cbf null
+    novelData = null
+    async.waterfall [
+      (cbf) =>
+        @getInfo cbf
+      (info, cbf) =>
+        if info.clickTotal < 50000 || info.recommendTotal < 5000
+          cbf new Error 'the novel is not famous'
         else
-          async.waterfall [
-            (cbf) ->
-              self.getPageContent chapterInfo.url, cbf
-            (data, cbf) ->
-              chapterInfo.len = data.length
-              chapterInfo.size = new Buffer(data).length
-              fs.writeFile file, data, cbf
-          ], (err) ->
-            if !err
-              chapterInfo.download = true
+          novelData = info
+          @getChapterInfos cbf
+      (chapterInfos, cbf) =>
+        request {
+          url : @frontcover
+          encoding : null
+        }, (err, res, body) ->
+          if err
+            cbf err
+          else
+            novelData.frontcover = body
+            cbf null, chapterInfos
+      (chapterInfos, cbf) =>
+        @getChapterContents chapterInfos, (err, data) ->
+          if err
+            cbf err
+          else
+            data = _.compact _.map data, (item) ->
+              if item.content?
+                if item.content.length < 1000
+                  null
+                else
+                  item
+              else
+                item
+            novelData.chapterInfos = data
             cbf null
-
-    getChapterInfos = (info, cbf) ->
-      savePath = path.join self.txtPath, info.author, info.name
-      async.waterfall [
-        (cbf) ->
-          mkdirp savePath, cbf
-        (err, cbf) ->
-          self.getChapterInfos cbf
-        (chapterInfos, cbf) ->
-          newChapterInfos = _.filter chapterInfos, (chapterInfo) ->
-            if ~chapterInfo.url.indexOf 'http://vipreader.qidian.com/'
-             false
-            else
-              true
-          async.eachLimit newChapterInfos, 10, (chapterInfo, cbf) ->
-            if ~chapterInfo.url.indexOf 'http://vipreader.qidian.com/'
-              GLOBAL.setImmediate () ->
-                cbf null
-            else
-              getContent path.join(savePath, chapterInfo.title) + '.txt', chapterInfo, cbf
-          ,(err) ->
-            cbf err, _.omit chapterInfos, 'url'
-      ], (err, chapterInfos) ->
-        info.chapterInfos = chapterInfos
-        request {url : self.frontcover, encoding : null}, (err, res, body) ->
-          if !err && res.statusCode == 200
-            fs.writeFile "#{savePath}/frontcover.jpg", body
-        fs.writeFile "#{savePath}/info.json", JSON.stringify(info), cbf
-
-
-    @getInfo (err, info) ->
-      if err
-        cbf err
-        return
-      else if info.clickTotal < 50000 || info.recommendTotal < 5000
-        cbf new Error 'the novel is not famous'
-        return
-      getChapterInfos info, (err) ->
-        cbf err
-
-
-      # fs.writeFile './chapterInfo.txt', JSON.stringify chapterInfo
-    # @getInfo (err, info) ->
-    #   fs.writeFile './info.txt', JSON.stringify info
-    # @getPageContent 'a', (err, content) ->
-    #   console.dir content
+    ], (err) =>
+      cbf err, novelData
+  
+  getChapterContents : (chapterInfos, cbf) ->
+    async.eachLimit chapterInfos, 10, (chapterInfo, cbf) =>
+      url = chapterInfo.url
+      delete chapterInfo.url
+      if ~url.indexOf 'http://vipreader.qidian.com/'
+        GLOBAL.setImmediate () ->
+          cbf null
+      else
+        @getPageContent url, (err, data) ->
+          if err
+            cbf err
+          else
+            chapterInfo.content = data
+            cbf null
+    , (err) ->
+      cbf err, chapterInfos
   ###*
    * getPageContent 获取章节内容
    * @param  {String} url 章节URL
@@ -172,122 +159,18 @@ class Qidian
       if err
         cbf err
         return
-      self._getChapterInfos data, cbf
+      cbf null, qidianUtil.getChapterInfos data
   ###*
    * getInfo 获取小说信息
    * @param  {Function} cbf 回调函数
    * @return {[type]}     [description]
   ###
   getInfo : (cbf) ->
-    self = @
-    self._request self.url, (err, data) ->
+    @_request @url, (err, data) =>
       if err
         cbf err
       else
-        self._getInfo data, cbf
-  _getChapterInfos : (data, cbf) ->
-    re = /<div id=\"bigcontbox\" class=\"bigcontbox\">([\s\S]*?)<div class=\"book_opt\">/
-    result = re.exec data
-    if !result
-      cbf new Error 'get chapter info fail!'
-    content = result[1]
-    flagStr = '<b>作品相关&nbsp;</b>'
-    index = content.indexOf flagStr
-    if ~!index
-      content = content.substring index + flagStr.length
-    flagStr = "<div class='title'>"
-    index = content.indexOf flagStr
-    if !index
-      cbf new Error 'get chapter info fail!'
-    content = content.substring index
-    re = /<a [\s\S]*?href=\"([\s\S]*?)\"[\s\S]*?>([\s\S]*?)<\/a>/g
-    chapterInfoList = content.match re
-    re = /<a [\s\S]*?href=\"([\s\S]*?)\"[\s\S]*?>([\s\S]*?)<\/a>/
-    infos = _.map chapterInfoList, (chapterInfo) ->
-      result = re.exec chapterInfo
-      if result[1] && result[2]
-        url = result[1].trim()
-        if !~url.indexOf 'http://'
-          url = "http://read.qidian.com/#{url}"
-        {
-          url : url
-          title : result[2].trim()
-        }
-    GLOBAL.setImmediate () ->
-      cbf null, _.compact infos
-  _getInfo : (data, cbf) ->
-    self = @
-    getDesc = (content) ->
-      re = /id=\"essactive\">[\s\S]*?<\/b>([\s\S]*?)<span id=\"spanBambookPromotion\"/
-      result = re.exec content
-      if !result
-        null
-      else
-        desc = result[1]
-        re = /[<br>|&nbsp;]/g
-        desc = desc.replace re, ''
-        result = _.map desc.split('\r\n'), (item) ->
-          item = item.trim()
-          if item.length
-            item
-          else
-            null
-        _.compact(result).join '\r\n'
-
-    getAuthorAndName = (content) ->
-      re = /<div class=\"book_info\" id=\"divBookInfo\">[\s\S]*?<h1>([\s\S]*?)<\/h1>[\s\S]*?<a [\s\S]*?>([\s\S]*?)<\/a>/
-      result = re.exec content
-      if !result || !result[1] || !result[2]
-        null
-      else
-        {
-          author : result[2].trim()
-          name : result[1].trim()
-        }
-    getRecommendTotal = (content) ->
-      re = /<b>总推荐：<\/b>([\s\S]*?)$/
-      result = re.exec content
-      if !result
-        null
-      else
-        GLOBAL.parseInt result[1]
-    getClickTotal = (content) ->
-      re = /<b>总点击：<\/b>([\s\S]*?)$/
-      result = re.exec content
-      if !result
-        null
-      else
-        GLOBAL.parseInt result[1]
-    getType = (content) ->
-      re = /<b>小说类别：<\/b>[\s\S]*?>([\s\S]*?)<\/a>/
-      result = re.exec content
-      if !result
-        null
-      else
-        result[1]
-    getStatus = (content) ->
-      re = /<b>写作进程：<\/b>([\s\S]*?)\r/
-      result = re.exec content
-      if !result
-        null
-      else
-        result[1]
-
-    info = getAuthorAndName(data) || {}
-    info.desc = getDesc data
-    info.recommendTotal = getRecommendTotal data
-    info.clickTotal = getClickTotal data
-    info.type = getType data
-    info.status = getStatus data
-    info.sourceInfo =
-      qidian : 
-        imgUrl : self.frontcover
-        bookId : self.bookId
-    GLOBAL.setImmediate () ->
-      if _.values(info).length == 8
-        cbf null, info
-      else
-        cbf new Error 'get info fail'
+        cbf null, qidianUtil.getInfo data
   ###*
    * _request 请求数据(http)
    * @param  {String} url 请求的url地址
