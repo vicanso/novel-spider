@@ -2,7 +2,7 @@ _ = require 'underscore'
 QidianUtil = 
   getInfo : (data) ->
     getDesc = (content) ->
-      re = /id=\"essactive\">[\s\S]*?<\/b>([\s\S]*?)<span id=\"spanBambookPromotion\"/
+      re = /id=\"essactive\">[\s\S]*?<\/b><span itemprop="description">([\s\S]*?)<span id=\"spanBambookPromotion\"/
       result = re.exec content
       if !result
         null
@@ -20,7 +20,7 @@ QidianUtil =
             null
         _.compact(result).join '\r\n'
     getAuthorAndName = (content) ->
-      re = /<div class=\"book_info\" id=\"divBookInfo\">[\s\S]*?<h1>([\s\S]*?)<\/h1>[\s\S]*?<a [\s\S]*?>([\s\S]*?)<\/a>/
+      re = /<div class=\"book_info\" id=\"divBookInfo\">[\s\S]*?<h1[\s\S]*?>([\s\S]*?)<\/h1>[\s\S]*?<a [\s\S]*?><span[\s\S]*?>([\s\S]*?)<\/span><\/a>/
       result = re.exec content
       if !result || !result[1] || !result[2]
         null
