@@ -1,14 +1,14 @@
 async = require 'async'
 fs = require 'fs'
 _ = require 'underscore'
+iconv = require 'iconv-lite'
+novelUtils = require './utils'
 cheerio = require 'cheerio'
 debug = require('debug') 'novel'
 
 
 class US23
   constructor : (@id) ->
-
-
   getInfos : (cbf) ->
     async.waterfall [
       (cbf) =>
@@ -69,7 +69,12 @@ class US23
 
 
   _getInfoHtml : (cbf) ->
-    fs.readFile './23us_book_page', cbf
+    novelUtils.request "http://www.23us.com/book/#{@id}", (err, buf) ->
+      if err
+        cbf err
+      else
+        cbf null, iconv.decode buf, 'gbk'
+    # fs.readFile './23us_book_page', cbf
 
 
   _removeRelativeTags : (content) ->
@@ -82,7 +87,6 @@ class US23
     _.each reList, (re) ->
       content = content.replace re, ''
     content
-  _request : (url ,cbf) ->
 
 
 
