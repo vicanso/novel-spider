@@ -29,9 +29,8 @@ saveChapter = (qidian, chapters, id, cbf) ->
     number = index
     qidian.getChapter chapter.url, (err, data) ->
       if data
-        fs.writeFile path.join(savePath, "#{number}_#{chapter.title}"), data, cbf
-      else
-        cbf null
+        fs.writeFile path.join(savePath, "#{number}_#{chapter.title}"), data
+      cbf null
   , cbf
 
 

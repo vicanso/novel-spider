@@ -26,10 +26,9 @@
       number = index;
       return qidian.getChapter(chapter.url, function(err, data) {
         if (data) {
-          return fs.writeFile(path.join(savePath, "" + number + "_" + chapter.title), data, cbf);
-        } else {
-          return cbf(null);
+          fs.writeFile(path.join(savePath, "" + number + "_" + chapter.title), data);
         }
+        return cbf(null);
       });
     }, cbf);
   };

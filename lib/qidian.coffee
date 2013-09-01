@@ -51,12 +51,15 @@ class Qidian
         @_getInfoHtml cbf
       (html, cbf) =>
         $ = cheerio.load html
+        status = 1
+        if $('#bookdiv [itemprop="updataStatus"]').text() == '已经完本'
+          status = 0
         otherInfos = _.compact $('#contentdiv .data td').text().split /\s/g
         cbf null, {
           name : $('#divBookInfo .title h1[itemprop="name"]').text().trim()
           author : $('#divBookInfo .title [itemprop="author"] [itemprop="name"]').text().trim()
           type : $('#bookdiv [itemprop="genre"]').text()
-          status : $('#bookdiv [itemprop="updataStatus"]').text()
+          status : status
           clickTotal : GLOBAL.parseInt otherInfos[0]?.split('：')[1]
           recommendTotal : GLOBAL.parseInt otherInfos[2]?.split('：')[1]
           wordTotal : GLOBAL.parseInt otherInfos[3]?.split('：')[1]
