@@ -55,6 +55,8 @@ class Qidian
         cbf null, {
           name : $('#divBookInfo .title h1[itemprop="name"]').text().trim()
           author : $('#divBookInfo .title [itemprop="author"] [itemprop="name"]').text().trim()
+          type : $('#bookdiv [itemprop="genre"]').text()
+          status : $('#bookdiv [itemprop="updataStatus"]').text()
           clickTotal : GLOBAL.parseInt otherInfos[0]?.split('：')[1]
           recommendTotal : GLOBAL.parseInt otherInfos[2]?.split('：')[1]
           wordTotal : GLOBAL.parseInt otherInfos[3]?.split('：')[1]
@@ -86,6 +88,10 @@ class Qidian
   getChapter : (url, cbf) ->
     async.waterfall [
       (cbf) ->
+        if !url.indexOf 'http://vipreader.qidian.com'
+          GLOBAL.setImmediate ->
+            cbf new Error 'Can not get vip chapter'
+          return
         novelUtils.request url, cbf
       (data, cbf) ->
         $ = cheerio.load data
