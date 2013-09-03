@@ -51,14 +51,16 @@
     });
   };
 
+  Qidian.search('斗破苍穹', function(err, data) {
+    return console.dir(data);
+  });
+
   d = domain.create();
 
   d.on('error', function(err) {
     return console.error(err);
   });
 
-  d.run(function() {
-    return startQidians();
-  });
+  d.run(function() {});
 
 }).call(this);

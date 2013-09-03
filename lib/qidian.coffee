@@ -12,7 +12,38 @@ novelUtils = require './utils'
 class Qidian
   constructor : (@id) ->
 
-
+  search : (name, author, cbf) ->
+    if _.isFunction author
+      cbf = author
+      author = ''
+    getSearchBooks = (name, cbf) ->
+      url = "http://sosu.qidian.com/ajax/search.ashx?method=Search&keyword=#{name}&range=&ranker=&n=10&start=&internalsiteid=&categoryid=&action_status=&authortagid=&sign_status=&vip_status=&rpid=10&groupbyparams="
+      referer = "http://sosu.qidian.com/searchresult.aspx?searchkey=#{name}&searchtype=综合"
+      options = 
+        url : GLOBAL.encodeURI url
+        headers : 
+          Referer : GLOBAL.encodeURI referer
+          'X-Requested-With' : 'XMLHttpRequest'
+      async.waterfall [
+        (cbf) ->
+          novelUtils.request options, cbf
+        (data, cbf) ->
+          try
+            books = JSON.parse(data).Data.search_response.books
+          catch err
+            cbf err
+            return
+          cbf null, _.map books, (book) ->
+            _.pick book, ['authorname', 'bookname', 'bookid']
+      ], cbf
+    async.waterfall [
+      (cbf) ->
+        getSearchBooks name, cbf
+      (books, cbf) ->
+        book = _.find books, (book) ->
+          book.bookname == name && (author == '' || author == book.authorname)
+        cbf null, book
+    ], cbf
   download : (savePath, cbf) ->
     async.waterfall [
       (cbf) =>
@@ -116,4 +147,6 @@ class Qidian
     novelUtils.request "http://www.qidian.com/Book/#{@id}.aspx", cbf
   _getChaptersHtml : (cbf) ->
     novelUtils.request "http://read.qidian.com/BookReader/#{@id}.aspx", cbf
+Qidian.search = Qidian::search
+
 module.exports = Qidian
