@@ -48,8 +48,12 @@ startQidians = ->
     console.dir 'complete'
 
 
-Qidian.search '斗破苍穹', (err, data) ->
-  console.dir data
+# Qidian.search '斗破苍穹', (err, data) ->
+#   console.dir data
+
+US23.search '斗破苍穹', (err, data) ->
+
+
 d = domain.create()
 
 d.on 'error', (err) ->

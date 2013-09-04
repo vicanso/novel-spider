@@ -9,6 +9,34 @@ debug = require('debug') 'novel'
 
 class US23
   constructor : (@id) ->
+  search : (name, author, cbf) ->
+
+    async.waterfall [
+      (cbf) ->
+        codeList = iconv.encode(name, 'gbk').toString('hex').toUpperCase().split ''
+        result = _.map codeList, (code, i) ->
+          if i % 2 == 0
+            "%#{code}"
+          else
+            code
+        cbf null, result.join ''
+      (name, cbf) ->
+        url = "http://www.23us.com/modules/article/search.php?searchtype=articlename&searchkey=#{name}"
+        options = 
+          url : url
+          encoding : null
+        console.dir options
+        novelUtils.request options, cbf
+      (buf, cbf) ->
+        console.dir buf
+        cbf null, iconv.decode buf, 'gbk'
+      (html, cbf) ->
+        $ = cheerio.load html
+        fs.writeFile './text.html', html
+        trList = $('#content tr')
+        console.dir trList.length
+    ], (err) ->
+      console.dir err
   getInfos : (cbf) ->
     async.waterfall [
       (cbf) =>
@@ -89,7 +117,7 @@ class US23
     content
 
 
-
+US23.search = US23::search
 
 
 module.exports = US23

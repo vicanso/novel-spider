@@ -51,9 +51,7 @@
     });
   };
 
-  Qidian.search('斗破苍穹', function(err, data) {
-    return console.dir(data);
-  });
+  US23.search('斗破苍穹', function(err, data) {});
 
   d = domain.create();
 
