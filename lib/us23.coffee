@@ -10,7 +10,9 @@ debug = require('debug') 'novel'
 class US23
   constructor : (@id) ->
   search : (name, author, cbf) ->
-
+    if _.isFunction author
+      cbf = author
+      author = ''
     async.waterfall [
       (cbf) ->
         codeList = iconv.encode(name, 'gbk').toString('hex').toUpperCase().split ''
@@ -25,18 +27,41 @@ class US23
         options = 
           url : url
           encoding : null
-        console.dir options
         novelUtils.request options, cbf
       (buf, cbf) ->
-        console.dir buf
         cbf null, iconv.decode buf, 'gbk'
       (html, cbf) ->
         $ = cheerio.load html
-        fs.writeFile './text.html', html
-        trList = $('#content tr')
-        console.dir trList.length
-    ], (err) ->
-      console.dir err
+        trList = $('#content .grid tr')
+        getId = (tdList) ->
+          td = tdList.first()
+          href = td.find('a').attr 'href'
+          if href
+            href.replace 'http://www.23us.com/book/', ''
+          else
+            null
+        getInfo = (tdList) ->
+          _.map tdList, (td) ->
+            td = $ td
+            td.text().trim()
+        infos = _.map trList, (tr) ->
+          tr = $ tr
+          tds = tr.find 'td'
+          info = getInfo tds
+          id = getId tds
+          {
+            id : id
+            name : info[0]
+            author : info[2]
+            _type : 'us23'
+          }
+        cbf null, infos
+      (books, cbf) ->
+        cbf null, _.find books, (book) ->
+          book.name == name && (author == '' || author == book.author)
+    ], cbf
+
+
   getInfos : (cbf) ->
     async.waterfall [
       (cbf) =>
@@ -64,7 +89,8 @@ class US23
         $('.L a').each ->
           element = $ @
           chapterInfos.push {
-            title : element.text()
+            _type : 'us23'
+            title : element.text().replace(/【[\s\S]*】/, '').trim()
             url : chapterUrl + element.attr 'href'
           }
         cbf null, chapterInfos
@@ -74,25 +100,34 @@ class US23
   getChapter : (url, cbf) ->
     async.waterfall [
       (cbf) ->
-        fs.readFile './23us_content_page', cbf
+        novelUtils.request url, cbf
+      (buf, cbf) ->
+        cbf null, iconv.decode buf, 'gbk'
       (data, cbf) =>
         $ = cheerio.load data
-        content = @_removeRelativeTags $('#contents').text()
+        content = @::_removeRelativeTags $('#contents').text()
         contentList = content.split '\n'
         contentList = _.compact _.map contentList, (content) ->
           content.trim()
         cbf null, contentList.join '\n'
     ], cbf
 
+
+
   _getChaptersHtml : (cbf) ->
     async.waterfall [
       (cbf) =>
         if @chapterUrl
-          cbf null, {}
+          cbf null, @chapterUrl
         else
           @getInfos cbf
-      (info, cbf) ->
-        fs.readFile './23us_chapter_page', cbf
+      (chapterUrl, cbf) ->
+        if _.isObject chapterUrl
+          chapterUrl = chapterUrl.chapterUrl
+        novelUtils.request chapterUrl, cbf
+      (buf, cbf) ->
+        cbf null, iconv.decode buf, 'gbk'
+        # fs.readFile './23us_chapter_page', cbf
     ], cbf
 
 
@@ -118,6 +153,6 @@ class US23
 
 
 US23.search = US23::search
-
+US23.getChapter = US23::getChapter
 
 module.exports = US23

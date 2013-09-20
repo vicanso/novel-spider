@@ -18,15 +18,17 @@ utils =
         encoding : null
         headers :
           'Accept-Encoding' : 'gzip'
-    request options, (err, res, body) =>
-      if err
-        if retryTimes > 0
-          @request url, --retryTimes, cbf
+    _.delay =>
+      request options, (err, res, body) =>
+        if err
+          if retryTimes > 0
+            @request url, --retryTimes, cbf
+          else
+            cbf err
+        else if res?.headers?['content-encoding'] == 'gzip'
+          zlib.gunzip body, cbf
         else
-          cbf err
-      else if res?.headers?['content-encoding'] == 'gzip'
-        zlib.gunzip body, cbf
-      else
-        cbf null, body
+          cbf null, body
+    , 30
 
 module.exports = utils

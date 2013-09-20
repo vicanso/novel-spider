@@ -6,6 +6,7 @@ path = require 'path'
 _ = require 'underscore'
 iconv = require 'iconv-lite'
 fs = require 'fs'
+moment = require 'moment'
 novelUtils = require './utils'
 
 
@@ -34,14 +35,22 @@ class Qidian
             cbf err
             return
           cbf null, _.map books, (book) ->
-            _.pick book, ['authorname', 'bookname', 'bookid']
+            book.author = book.authorname
+            book.name = book.bookname
+            book.id = book.bookid
+            {
+              name : book.bookname
+              author : book.authorname
+              id : book.bookid
+              _type : 'qidian'
+            }
       ], cbf
     async.waterfall [
       (cbf) ->
         getSearchBooks name, cbf
       (books, cbf) ->
         book = _.find books, (book) ->
-          book.bookname == name && (author == '' || author == book.authorname)
+          book.name == name && (author == '' || author == book.author)
         cbf null, book
     ], cbf
   download : (savePath, cbf) ->
@@ -87,12 +96,14 @@ class Qidian
           status = 0
         otherInfos = _.compact $('#contentdiv .data td').text().split /\s/g
         cbf null, {
+          id : @id
           name : $('#divBookInfo .title h1[itemprop="name"]').text().trim()
           author : $('#divBookInfo .title [itemprop="author"] [itemprop="name"]').text().trim()
-          type : $('#bookdiv [itemprop="genre"]').text()
+          category : $('#bookdiv [itemprop="genre"]').text()
           status : status
-          clickTotal : GLOBAL.parseInt otherInfos[0]?.split('：')[1]
-          recommendTotal : GLOBAL.parseInt otherInfos[2]?.split('：')[1]
+          click : GLOBAL.parseInt otherInfos[0]?.split('：')[1]
+          recommend : GLOBAL.parseInt otherInfos[2]?.split('：')[1]
+          weekClick : GLOBAL.parseInt otherInfos[1]?.split('：')[1]
           wordTotal : GLOBAL.parseInt otherInfos[3]?.split('：')[1]
           desc : $('#contentdiv .txt [itemprop="description"]').text().trim()
         }
@@ -104,16 +115,23 @@ class Qidian
       (html, cbf) =>
         $ = cheerio.load html
         chapters = _.compact _.map $('#content .list li>a'), (item) ->
-          infos = _.compact item.attribs.title.split ' '
-          wordTotal = GLOBAL.parseInt infos[0]?.split('：')[1]
-          updatedAt = infos[1].split('：')[1]
+          title = item.attribs.title
+          re = /更新时间：([\d|-]*) /
+          result = re.exec title
+          # infos = _.compact item.attribs.title.split ' '
+          # wordTotal = GLOBAL.parseInt infos[0]?.split('：')[1]
+          # updatedAt = infos[1].split('：')[1]
           url = item.attribs.href
           if !~url.indexOf 'http://'
             url = "http://read.qidian.com#{url}"
-          if !wordTotal || wordTotal > 1500
+          if ~url.indexOf 'http://vipreader.qidian.com'
+            url = null
+          if url
             {
-              title : $(item).text()
+              _type : 'qidian'
+              title : $(item).text().replace(/【[\s\S]*】/, '').trim()
               url : url
+              updatedAt : moment(result[1]).format 'YYYY-MM-DD' 
             }
           else
             null
@@ -148,5 +166,5 @@ class Qidian
   _getChaptersHtml : (cbf) ->
     novelUtils.request "http://read.qidian.com/BookReader/#{@id}.aspx", cbf
 Qidian.search = Qidian::search
-
+Qidian.getChapter = Qidian::getChapter
 module.exports = Qidian

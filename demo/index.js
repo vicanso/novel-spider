@@ -1,7 +1,5 @@
 (function() {
-  var Qidian, US23, async, d, domain, fs, mkdirp, path, saveChapter, startQidians, _, _ref;
-
-  _ref = require('../index'), Qidian = _ref.Qidian, US23 = _ref.US23;
+  var JTNovel, async, docs, fs, mkdirp, path, _;
 
   _ = require('underscore');
 
@@ -13,52 +11,45 @@
 
   path = require('path');
 
-  domain = require('domain');
+  JTNovel = require('../index');
 
-  saveChapter = function(qidian, chapters, id, cbf) {
-    var index, savePath;
-    savePath = path.join(__dirname, 'qidian', "" + id);
-    mkdirp.sync(savePath);
-    index = 0;
-    return async.eachLimit(chapters, 5, function(chapter, cbf) {
-      var number;
-      index++;
-      number = index;
-      return qidian.getChapter(chapter.url, function(err, data) {
-        if (data) {
-          fs.writeFile(path.join(savePath, "" + number + "_" + chapter.title), data);
-        }
-        return cbf(null);
-      });
-    }, cbf);
-  };
+  docs = require('./docs');
 
-  startQidians = function() {
-    var ids;
-    ids = require('./ids');
-    return async.eachLimit(ids, 4, function(id, cbf) {
-      var qidian;
-      qidian = new Qidian(id);
-      return async.waterfall([
-        function(cbf) {
-          return qidian.getChapters(cbf);
-        }, function(chapters, cbf) {
-          return saveChapter(qidian, chapters, id, cbf);
-        }
-      ], cbf);
-    }, function(err) {
-      return console.dir('complete');
+  async.eachLimit(docs, 1, function(doc, cbf) {
+    var author, name, novelInfos, searchBook;
+    name = doc.name;
+    author = doc.author;
+    searchBook = null;
+    novelInfos = null;
+    return async.waterfall([
+      function(cbf) {
+        searchBook = new JTNovel(name, author);
+        return searchBook.search(cbf);
+      }, function(books, cbf) {
+        return searchBook.getInfos(cbf);
+      }, function(infos, cbf) {
+        novelInfos = infos;
+        console.dir(infos);
+        return searchBook.getChapters([], cbf);
+      }, function(chapters, cbf) {
+        var savePath, successChapters;
+        savePath = "/Users/tree/tmp/" + novelInfos.author + "/" + novelInfos.name;
+        mkdirp.sync(savePath);
+        successChapters = [];
+        return async.eachLimit(chapters, 5, function(chapter, cbf) {
+          return searchBook.getChapter(chapter, savePath, function(err, chapter) {
+            if (chapter) {
+              successChapters.push(chapter);
+            }
+            return cbf(null);
+          });
+        }, function(err) {
+          return cbf(null, successChapters);
+        });
+      }
+    ], function() {
+      return console.dir('.....');
     });
-  };
-
-  US23.search('斗破苍穹', function(err, data) {});
-
-  d = domain.create();
-
-  d.on('error', function(err) {
-    return console.error(err);
   });
-
-  d.run(function() {});
 
 }).call(this);
