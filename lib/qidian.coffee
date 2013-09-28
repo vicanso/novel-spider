@@ -92,8 +92,8 @@ class Qidian
       (html, cbf) =>
         $ = cheerio.load html
         status = 1
-        if $('#bookdiv [itemprop="updataStatus"]').text() == '已经完本'
-          status = 0
+        # if $('#bookdiv [itemprop="updataStatus"]').text() == '已经完本'
+        #   status = 0
         otherInfos = _.compact $('#contentdiv .data td').text().split /\s/g
         cbf null, {
           id : @id
