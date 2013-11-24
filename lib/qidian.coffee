@@ -124,11 +124,10 @@ class Qidian
           url = item.attribs.href
           if !~url.indexOf 'http://'
             url = "http://read.qidian.com#{url}"
-          if ~url.indexOf 'http://vipreader.qidian.com'
-            url = null
+          # if ~url.indexOf 'http://vipreader.qidian.com'
+          #   url = null
           if url
             {
-              _type : 'qidian'
               title : $(item).text().replace(/【[\s\S]*】/, '').trim()
               url : url
               updatedAt : moment(result[1]).format 'YYYY-MM-DD' 
