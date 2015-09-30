@@ -1,1 +1,1 @@
-get novel from web
+novel spider
