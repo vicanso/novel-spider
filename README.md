@@ -1,0 +1,1 @@
+get novel from web
