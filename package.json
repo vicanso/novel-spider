@@ -21,6 +21,8 @@
     "lodash": "^3.10.1",
     "superagent": "^1.4.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "co": "^4.6.0"
+  },
   "readme": "novel-spider"
 }
