@@ -18,11 +18,10 @@
   "main": "app",
   "readmeFilename": "README.md",
   "dependencies": {
-    "lodash": "^3.10.1",
-    "superagent": "^1.4.0"
-  },
-  "devDependencies": {
-    "co": "^4.6.0"
+    "cheerio": "^0.20.0",
+    "lodash": "^4.13.0",
+    "moment": "^2.13.0",
+    "superagent": "^2.0.0-alpha.3"
   },
   "readme": "novel-spider"
 }
