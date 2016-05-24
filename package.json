@@ -19,9 +19,11 @@
   "readmeFilename": "README.md",
   "dependencies": {
     "cheerio": "^0.20.0",
+    "iconv-lite": "^0.4.13",
     "lodash": "^4.13.0",
     "moment": "^2.13.0",
-    "superagent": "^2.0.0-alpha.3"
+    "superagent": "^2.0.0-alpha.3",
+    "superagent-charset": "^1.0.0"
   },
   "readme": "novel-spider"
 }
