@@ -20,8 +20,10 @@
   "dependencies": {
     "cheerio": "^0.20.0",
     "iconv-lite": "^0.4.13",
-    "lodash": "^4.13.0",
+    "lodash": "^4.13.1",
     "moment": "^2.13.0",
+    "mongoose": "^4.4.19",
+    "require-tree": "^1.1.1",
     "superagent": "^2.0.0-alpha.3",
     "superagent-charset": "^1.0.0"
   },
