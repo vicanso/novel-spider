@@ -13,7 +13,7 @@ const getMaxId = (name) => {
   });
 }
 
-const sync = (name, start, end) => {
+const sync = (name, start, end, offset) => {
   let Novel = Qidian;
   if (name === 'Wx23') {
     Novel = Wx23;
@@ -33,28 +33,30 @@ const sync = (name, start, end) => {
       console.info(`get ${name} ${id} novel info success`);
       return model.save();
     }).then(data => {
-      get(++id);
+      get(id + offset);
     }).catch(err => {
       console.error(`get ${name} ${id} novel info fail,%s`, err);
-      get(++id);
+      get(id + offset);
     });
   };
   get(start);
 };
 
 
-exports.sync = (name, max) => {
+exports.sync = (name, max, parallelTask) => {
   getMaxId(name).then(id => {
-    sync(name, ++id, max);
+    for (let i = 0; i < parallelTask; i++) {
+      sync(name, ++id, max, parallelTask);
+    }
   }).catch(err => {
     console.error(err);
   });
 };
 
 exports.syncWx23 = (max) => {
-  exports.sync('Wx23', max);
+  exports.sync('Wx23', max, 1);
 };
 
 exports.syncQidian = (max) => {
-  exports.sync('Qidian', max);
+  exports.sync('Qidian', max, 5);
 };
