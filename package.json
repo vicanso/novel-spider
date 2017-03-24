@@ -18,14 +18,19 @@
   "main": "app",
   "readmeFilename": "README.md",
   "dependencies": {
-    "cheerio": "^0.20.0",
-    "iconv-lite": "^0.4.13",
-    "lodash": "^4.13.1",
-    "moment": "^2.13.0",
-    "mongoose": "^4.4.19",
-    "require-tree": "^1.1.1",
-    "superagent": "^2.0.0-alpha.3",
-    "superagent-charset": "^1.0.0"
+    "bluebird": "^3.5.0",
+    "cheerio": "^0.22.0",
+    "iconv-lite": "^0.4.15",
+    "lodash": "^4.17.4",
+    "superagent": "^3.5.2"
   },
-  "readme": "novel-spider"
+  "devDependencies": {
+    "eslint": "^3.12.2",
+    "eslint-config-airbnb": "^13.0.0",
+    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-jsx-a11y": "^2.2.3",
+    "eslint-plugin-react": "^6.8.0",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.1.0"
+  }
 }
