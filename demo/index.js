@@ -4,7 +4,7 @@ const {
 } = require('..');
 
 
-utils.addPulgin((req) => {
+utils.addPlugin((req) => {
   console.dir(req.url);
 });
 
