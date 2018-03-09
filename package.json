@@ -1,7 +1,7 @@
 {
   "name": "novel-spider",
   "description": "novel-spider",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "author": {
     "name": "vicanso 小墨鱼",
     "email": "vicansocanbico@gmail.com"
@@ -18,24 +18,20 @@
   "readmeFilename": "README.md",
   "scripts": {
     "size": "t=\"$(npm pack .)\"; wc -c \"${t}\"; tar tvf \"${t}\"; rm \"${t}\";",
-    "test": "node ./node_modules/.bin/eslint ./lib/*.js && node ./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha ./test/*.js --",
-    "eslint": "node ./node_modules/.bin/eslint ./lib/*.js"
+    "format": "node node_modules/.bin/prettier --write *.js */*.js",
+    "lint": "node ./node_modules/.bin/eslint *.js */*.js"
   },
   "dependencies": {
-    "bluebird": "^3.5.0",
     "cheerio": "^1.0.0-rc.2",
     "iconv-lite": "^0.4.19",
-    "lodash": "^4.17.4",
-    "superagent": "^3.6.0",
-    "superagent-proxy": "^1.0.2"
+    "lodash": "^4.17.5",
+    "superagent": "^3.8.2"
   },
   "devDependencies": {
-    "eslint": "^3.12.2",
-    "eslint-config-airbnb": "^13.0.0",
-    "eslint-plugin-import": "^2.2.0",
-    "eslint-plugin-jsx-a11y": "^2.2.3",
-    "eslint-plugin-react": "^6.8.0",
-    "istanbul": "^0.4.5",
-    "mocha": "^3.1.0"
+    "eslint": "^4.18.2",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-plugin-import": "^2.9.0",
+    "prettier": "^1.11.1"
   }
 }

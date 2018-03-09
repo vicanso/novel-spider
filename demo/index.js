@@ -1,18 +1,7 @@
-const {
-  US23,
-  utils,
-} = require('..');
+const BiQuGe = require('../lib/biquge');
 
+const novel = new BiQuGe(18949);
 
-utils.addPlugin((req) => {
-  // console.dir(req.url);
-});
-
-const us23 = new US23();
-us23.setID('9092');
-
-us23.getIntroduction().then(console.dir)
-  .catch(console.error);
-
-// us23.getChapter(1).then(console.dir)
-//   .catch(console.error);
+novel.getInfos().then(console.dir);
+novel.getChapters().then(console.dir);
+novel.getChapter(0).then(console.dir);
