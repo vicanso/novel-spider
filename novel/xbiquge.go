@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/mozillazg/request"
@@ -32,6 +33,17 @@ func (n *XBiQuGe) getDetail() (html string, err error) {
 	id := n.ID
 	prefix := id / 1000
 	url := fmt.Sprintf("https://%s/%d_%d/", xBiQuGeHost, prefix, id)
+	// 避免多次去获取detail，增加缓存
+	data, _ := cache.Get(url)
+	if data != nil {
+		detail := data.(*detailCache)
+		if detail.ExpiredAt > time.Now().Unix() {
+			html = detail.HTML
+			n.detailHTML = html
+			return
+		}
+	}
+
 	c := new(http.Client)
 	req := request.NewRequest(c)
 	resp, err := req.Get(url)
@@ -42,6 +54,11 @@ func (n *XBiQuGe) getDetail() (html string, err error) {
 	if html != "" {
 		n.detailHTML = html
 	}
+	cache.Add(url, &detailCache{
+		HTML:      html,
+		ExpiredAt: time.Now().Unix() + detailTTL,
+	})
+
 	return
 }
 
@@ -88,8 +105,9 @@ func (n *XBiQuGe) GetChapters() (chapters []*Chapter, err error) {
 		title := strings.TrimSpace(s.Text())
 		url, _ := s.Attr("href")
 		chapters = append(chapters, &Chapter{
-			Titile: title,
-			URL:    fmt.Sprintf("https://%s%s", xBiQuGeHost, url),
+			Index: i,
+			Title: title,
+			URL:   fmt.Sprintf("https://%s%s", xBiQuGeHost, url),
 		})
 	})
 	return
