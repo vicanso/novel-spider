@@ -64,6 +64,7 @@ func main() {
 	if err := initAddEvent(c); err != nil {
 		panic(err)
 	}
+	logger.Info("sub add and update success")
 	// c.Pub(mq.TopicAddNovel, &novel.Source{
 	// 	Category:     novel.CategoryXBiQuge,
 	// 	ID:           78513,

@@ -8,8 +8,6 @@ RUN apk update \
   && dep ensure \
   && GOOS=linux GOARCH=amd64 go build -tags netgo -o novel-spider 
 
-FROM alpine
-
 
 FROM alpine
 

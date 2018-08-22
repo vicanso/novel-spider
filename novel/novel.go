@@ -31,22 +31,22 @@ type (
 	}
 	// BasicInfo 基本信息
 	BasicInfo struct {
-		Name   string `json:"name"`
-		Author string `json:"author"`
-		Brief  string `json:"brief"`
-		Cover  string `json:"cover"`
+		Name   string `json:"name,omitempty"`
+		Author string `json:"author,omitempty"`
+		Brief  string `json:"brief,omitempty"`
+		Cover  string `json:"cover,omitempty"`
 	}
 	// Chapter 章节信息
 	Chapter struct {
-		Index   int    `json:"index"`
-		Title   string `json:"title"`
-		URL     string `json:"url"`
-		Content string `json:"content"`
+		Index   int    `json:"index,omitempty"`
+		Title   string `json:"title,omitempty"`
+		URL     string `json:"url,omitempty"`
+		Content string `json:"content,omitempty"`
 	}
 	// Source source info
 	Source struct {
-		Category string `json:"category"`
-		ID       int    `json:"id"`
+		Category string `json:"category,omitempty"`
+		ID       int    `json:"id,omitempty"`
 		// ChapterIndex chapter index
 		ChapterIndex int `json:"chapterIndex,omitempty"`
 	}

@@ -1,0 +1,12 @@
+language: go
+sudo: required
+
+go:
+  - 1.10.x
+
+script:
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - docker build -t novel-spider .
+  - docker tag novel-spider $DOCKER_USERNAME/novel-spider
+  - docker push $DOCKER_USERNAME/novel-spider
+  - docker images
