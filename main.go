@@ -65,16 +65,26 @@ func main() {
 		panic(err)
 	}
 	logger.Info("sub add and update success")
+
+	// cb := func(info *novel.BasicInfo) {
+	// 	fmt.Println(info)
+	// }
+	// c.Sub(mq.TopicBasicInfo, mq.ChannelNovel, novel.CreateReceiveBasicInfoHandler(cb))
 	// c.Pub(mq.TopicAddNovel, &novel.Source{
-	// 	Category:     novel.CategoryXBiQuge,
+	// 	Category:     novel.CategoryXBiQuGe,
 	// 	ID:           78513,
 	// 	ChapterIndex: 10,
 	// })
 
-	// c.Pub(TopicUpdateChapter, &novel.Source{
-	// 	Category:     novel.CategoryXBiQuge,
+	// cb := func(chapter *novel.Chapter) {
+	// 	fmt.Println(chapter)
+	// }
+	// c.Sub(mq.TopicChapter, mq.ChannelNovel, novel.CreateReceiveChapterHandler(cb))
+
+	// c.Pub(mq.TopicUpdateChapter, &novel.Source{
+	// 	Category:     novel.CategoryXBiQuGe,
 	// 	ID:           78513,
-	// 	ChapterIndex: 580,
+	// 	ChapterIndex: 10,
 	// })
 
 	ch := make(chan int)

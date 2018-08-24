@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	// CategoryXBiQuge xbiquge category
-	CategoryXBiQuge = "xBiQuge"
+	// CategoryXBiQuGe xbiquge category
+	CategoryXBiQuGe = "xBiQuGe"
 )
 
 var (
@@ -31,10 +31,13 @@ type (
 	}
 	// BasicInfo 基本信息
 	BasicInfo struct {
-		Name   string `json:"name,omitempty"`
-		Author string `json:"author,omitempty"`
-		Brief  string `json:"brief,omitempty"`
-		Cover  string `json:"cover,omitempty"`
+		Name     string `json:"name,omitempty"`
+		Author   string `json:"author,omitempty"`
+		Brief    string `json:"brief,omitempty"`
+		Cover    string `json:"cover,omitempty"`
+		Category string `json:"category,omitempty"`
+		Source   string `json:"source,omitempty"`
+		SourceID int    `json:"sourceId,omitempty"`
 	}
 	// Chapter 章节信息
 	Chapter struct {
@@ -50,10 +53,10 @@ type (
 		// ChapterIndex chapter index
 		ChapterIndex int `json:"chapterIndex,omitempty"`
 	}
-	// AddHandlerCb add handler call back function
-	AddHandlerCb func(info *BasicInfo)
-	// UpdateChaperHandlerCb update chapter call back function
-	UpdateChaperHandlerCb func(chapter *Chapter)
+	// BasicInfoHandlerCb add handler call back function
+	BasicInfoHandlerCb func(info *BasicInfo)
+	// ChaperHandlerCb update chapter call back function
+	ChaperHandlerCb func(chapter *Chapter)
 )
 
 func init() {
@@ -66,7 +69,7 @@ func init() {
 
 // New create a novel instance
 func New(s Source) Novel {
-	if s.Category == CategoryXBiQuge {
+	if s.Category == CategoryXBiQuGe {
 		return &XBiQuGe{
 			ID: s.ID,
 		}
@@ -85,7 +88,7 @@ func getNovel(msg *nsq.Message) (n Novel, s *Source, err error) {
 }
 
 // CreateUpdateChapterHandler create a update chapter handler
-func CreateUpdateChapterHandler(cb UpdateChaperHandlerCb) nsq.Handler {
+func CreateUpdateChapterHandler(cb ChaperHandlerCb) nsq.Handler {
 	return nsq.HandlerFunc(func(msg *nsq.Message) (err error) {
 		n, s, err := getNovel(msg)
 		if err != nil {
@@ -102,8 +105,21 @@ func CreateUpdateChapterHandler(cb UpdateChaperHandlerCb) nsq.Handler {
 	})
 }
 
+// CreateReceiveChapterHandler create a receive chapter handler
+func CreateReceiveChapterHandler(cb ChaperHandlerCb) nsq.Handler {
+	return nsq.HandlerFunc(func(msg *nsq.Message) (err error) {
+		chapter := &Chapter{}
+		err = json.Unmarshal(msg.Body, chapter)
+		if err != nil {
+			return
+		}
+		cb(chapter)
+		return
+	})
+}
+
 // CreateAddHandler create a add handler
-func CreateAddHandler(cb AddHandlerCb) nsq.Handler {
+func CreateAddHandler(cb BasicInfoHandlerCb) nsq.Handler {
 	return nsq.HandlerFunc(func(msg *nsq.Message) (err error) {
 		n, _, err := getNovel(msg)
 		if err != nil {
@@ -113,9 +129,22 @@ func CreateAddHandler(cb AddHandlerCb) nsq.Handler {
 		if err != nil {
 			return
 		}
-		if cb != nil && info != nil && info.Name != "" && info.Author != "" {
+		if cb != nil && info != nil {
 			cb(info)
 		}
+		return
+	})
+}
+
+// CreateReceiveBasicInfoHandler create a receive handler
+func CreateReceiveBasicInfoHandler(cb BasicInfoHandlerCb) nsq.Handler {
+	return nsq.HandlerFunc(func(msg *nsq.Message) (err error) {
+		info := &BasicInfo{}
+		err = json.Unmarshal(msg.Body, info)
+		if err != nil {
+			return
+		}
+		cb(info)
 		return
 	})
 }

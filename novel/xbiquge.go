@@ -87,6 +87,12 @@ func (n *XBiQuGe) GetBasicInfo() (info *BasicInfo, err error) {
 
 	cover, _ := doc.Find("#fmimg img").Attr("src")
 	info.Cover = strings.TrimSpace(cover)
+
+	category := doc.Find(".box_con .con_top a").Eq(1).Text()
+	info.Category = strings.TrimSpace(category)
+
+	info.Source = CategoryXBiQuGe
+	info.SourceID = n.ID
 	return
 }
 

@@ -35,6 +35,7 @@ const (
 type (
 	// MQ mq client
 	MQ struct {
+		// TODO logger 调整为interface
 		Logger        *zap.Logger
 		LookupAddress []string
 		nodes         []*Node
@@ -89,7 +90,9 @@ func (mq *MQ) TimedFreshNodes(interval time.Duration) {
 	defer func() {
 		if err := recover(); err != nil {
 			e := err.(error)
-			mq.Logger.Error("timed fresh nodes fail", zap.Error(e))
+			if mq.Logger != nil {
+				mq.Logger.Error("timed fresh nodes fail", zap.Error(e))
+			}
 			// 如果定时任务异常，等待后继续检测
 			time.Sleep(30 * time.Second)
 			mq.TimedFreshNodes(interval)

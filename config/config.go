@@ -16,7 +16,6 @@ var viperInitTest = os.Getenv("VIPER_INIT_TEST")
 
 // 初始化配置
 func viperInit(path string) error {
-
 	v := viper.New()
 	v.SetConfigName("default")
 	v.AddConfigPath(".")
@@ -33,6 +32,7 @@ func viperInit(path string) error {
 	if env != "" {
 		viper.SetConfigName(env)
 		viper.AddConfigPath(".")
+		viper.AddConfigPath(path)
 		viper.SetConfigType("yml")
 		err := viper.ReadInConfig()
 		if err != nil {
