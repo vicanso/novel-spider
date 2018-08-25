@@ -27,8 +27,7 @@ func initUpdateChapterEvent(c *mq.MQ) (err error) {
 				zap.Error(err))
 		}
 	}
-	fn := novel.CreateUpdateChapterHandler(cb)
-	_, err = c.Sub(mq.TopicUpdateChapter, mq.ChannelNovel, fn)
+	c.SubUpdateChapter(cb)
 	return
 }
 
@@ -43,9 +42,7 @@ func initAddEvent(c *mq.MQ) (err error) {
 				zap.Error(err))
 		}
 	}
-	fn := novel.CreateAddHandler(cb)
-	// sub 只会在处理完成之后再sub另外一个
-	_, err = c.Sub(mq.TopicAddNovel, mq.ChannelNovel, fn)
+	err = c.SubAddNovel(cb)
 	return
 }
 

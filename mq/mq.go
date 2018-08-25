@@ -12,6 +12,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/mozillazg/request"
 	nsq "github.com/nsqio/go-nsq"
+	"github.com/vicanso/novel-spider/novel"
 	"go.uber.org/zap"
 )
 
@@ -51,6 +52,10 @@ type (
 		HTTPPort int    `json:"http_port"`
 		Version  string `json:"version"`
 	}
+	// BasicInfoHandlerCb add handler call back function
+	BasicInfoHandlerCb func(info *novel.BasicInfo)
+	// ChaperHandlerCb update chapter call back function
+	ChaperHandlerCb func(chapter *novel.Chapter)
 )
 
 func getNodes(address string) (nodes []*Node, err error) {
@@ -160,5 +165,85 @@ func (mq *MQ) Sub(topic, channel string, handler nsq.Handler) (consummer *nsq.Co
 		addressList = append(addressList, address)
 	}
 	err = consummer.ConnectToNSQDs(addressList)
+	return
+}
+
+func getNovel(msg *nsq.Message) (n novel.Novel, s *novel.Source, err error) {
+	s = &novel.Source{}
+	err = json.Unmarshal(msg.Body, s)
+	if err != nil {
+		return
+	}
+	n = novel.New(*s)
+	return
+}
+
+// SubAddNovel sub add novel
+func (mq *MQ) SubAddNovel(cb BasicInfoHandlerCb) (err error) {
+	fn := nsq.HandlerFunc(func(msg *nsq.Message) (err error) {
+		n, _, err := getNovel(msg)
+		if err != nil {
+			return
+		}
+		info, err := n.GetBasicInfo()
+		if err != nil {
+			return
+		}
+		if cb != nil && info != nil {
+			cb(info)
+		}
+		return
+	})
+	_, err = mq.Sub(TopicAddNovel, ChannelNovel, fn)
+	return
+}
+
+// SubUpdateChapter sub update chapter
+func (mq *MQ) SubUpdateChapter(cb ChaperHandlerCb) (err error) {
+	fn := nsq.HandlerFunc(func(msg *nsq.Message) (err error) {
+		n, s, err := getNovel(msg)
+		if err != nil {
+			return
+		}
+		chapter, err := n.GetChapter(s.ChapterIndex)
+		if err != nil {
+			return
+		}
+		if cb != nil && chapter != nil && chapter.Title != "" {
+			cb(chapter)
+		}
+		return
+	})
+	_, err = mq.Sub(TopicUpdateChapter, ChannelNovel, fn)
+	return
+}
+
+// SubReceiveChapter sub receive chapter
+func (mq *MQ) SubReceiveChapter(cb ChaperHandlerCb) (err error) {
+	fn := nsq.HandlerFunc(func(msg *nsq.Message) (err error) {
+		chapter := &novel.Chapter{}
+		err = json.Unmarshal(msg.Body, chapter)
+		if err != nil {
+			return
+		}
+		cb(chapter)
+		return
+	})
+	_, err = mq.Sub(TopicChapter, ChannelNovel, fn)
+	return
+}
+
+// SubReceiveNovel sub receive novel
+func (mq *MQ) SubReceiveNovel(cb BasicInfoHandlerCb) (err error) {
+	fn := nsq.HandlerFunc(func(msg *nsq.Message) (err error) {
+		info := &novel.BasicInfo{}
+		err = json.Unmarshal(msg.Body, info)
+		if err != nil {
+			return
+		}
+		cb(info)
+		return
+	})
+	_, err = mq.Sub(TopicBasicInfo, ChannelNovel, fn)
 	return
 }

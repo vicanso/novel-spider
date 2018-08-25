@@ -3,7 +3,6 @@ package novel
 import (
 	lru "github.com/hashicorp/golang-lru"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/nsqio/go-nsq"
 )
 
 const (
@@ -75,76 +74,4 @@ func New(s Source) Novel {
 		}
 	}
 	return nil
-}
-
-func getNovel(msg *nsq.Message) (n Novel, s *Source, err error) {
-	s = &Source{}
-	err = json.Unmarshal(msg.Body, s)
-	if err != nil {
-		return
-	}
-	n = New(*s)
-	return
-}
-
-// CreateUpdateChapterHandler create a update chapter handler
-func CreateUpdateChapterHandler(cb ChaperHandlerCb) nsq.Handler {
-	return nsq.HandlerFunc(func(msg *nsq.Message) (err error) {
-		n, s, err := getNovel(msg)
-		if err != nil {
-			return
-		}
-		chapter, err := n.GetChapter(s.ChapterIndex)
-		if err != nil {
-			return
-		}
-		if cb != nil && chapter != nil && chapter.Title != "" {
-			cb(chapter)
-		}
-		return
-	})
-}
-
-// CreateReceiveChapterHandler create a receive chapter handler
-func CreateReceiveChapterHandler(cb ChaperHandlerCb) nsq.Handler {
-	return nsq.HandlerFunc(func(msg *nsq.Message) (err error) {
-		chapter := &Chapter{}
-		err = json.Unmarshal(msg.Body, chapter)
-		if err != nil {
-			return
-		}
-		cb(chapter)
-		return
-	})
-}
-
-// CreateAddHandler create a add handler
-func CreateAddHandler(cb BasicInfoHandlerCb) nsq.Handler {
-	return nsq.HandlerFunc(func(msg *nsq.Message) (err error) {
-		n, _, err := getNovel(msg)
-		if err != nil {
-			return
-		}
-		info, err := n.GetBasicInfo()
-		if err != nil {
-			return
-		}
-		if cb != nil && info != nil {
-			cb(info)
-		}
-		return
-	})
-}
-
-// CreateReceiveBasicInfoHandler create a receive handler
-func CreateReceiveBasicInfoHandler(cb BasicInfoHandlerCb) nsq.Handler {
-	return nsq.HandlerFunc(func(msg *nsq.Message) (err error) {
-		info := &BasicInfo{}
-		err = json.Unmarshal(msg.Body, info)
-		if err != nil {
-			return
-		}
-		cb(info)
-		return
-	})
 }
