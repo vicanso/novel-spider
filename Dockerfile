@@ -11,6 +11,8 @@ RUN apk update \
 
 FROM alpine
 
+RUN apk add --no-cache ca-certificates
+
 COPY --from=builder /go/src/github.com/vicanso/novel-spider/novel-spider /usr/local/bin/novel-spider
 
 CMD ["novel-spider"]
