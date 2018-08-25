@@ -56,7 +56,3 @@
 [[constraint]]
   branch = "master"
   name = "github.com/hashicorp/golang-lru"
-
-[[constraint]]
-  branch = "go"
-  name = "github.com/vicanso/novel-spider"
