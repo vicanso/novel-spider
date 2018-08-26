@@ -17,7 +17,8 @@ import (
 )
 
 var (
-	json = jsoniter.ConfigCompatibleWithStandardLibrary
+	json           = jsoniter.ConfigCompatibleWithStandardLibrary
+	defaultTimeout = time.Second * 10
 )
 
 const (
@@ -58,9 +59,14 @@ type (
 	ChaperHandlerCb func(chapter *novel.Chapter)
 )
 
-func getNodes(address string) (nodes []*Node, err error) {
+func getRequest() *request.Request {
 	c := new(http.Client)
-	req := request.NewRequest(c)
+	c.Timeout = defaultTimeout
+	return request.NewRequest(c)
+}
+
+func getNodes(address string) (nodes []*Node, err error) {
+	req := getRequest()
 	resp, err := req.Get("http://" + address + "/nodes")
 	if err != nil {
 		return
@@ -137,8 +143,7 @@ func (mq *MQ) Pub(topic string, v interface{}) (err error) {
 	}
 
 	url := fmt.Sprintf("http://%s:%d/pub?topic=%s", node.Address, node.HTTPPort, topic)
-	c := new(http.Client)
-	req := request.NewRequest(c)
+	req := getRequest()
 	req.Body = bytes.NewReader(buf)
 	resp, err := req.Post(url)
 	if err != nil {
