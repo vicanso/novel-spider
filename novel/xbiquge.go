@@ -2,6 +2,7 @@ package novel
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -73,6 +74,10 @@ func (n *XBiQuGe) GetBasicInfo() (info *BasicInfo, err error) {
 		return
 	}
 	q := doc.Find("#maininfo #info")
+	if q.Length() == 0 {
+		err = errors.New("novel not found")
+		return
+	}
 	info = &BasicInfo{}
 
 	info.Name = strings.TrimSpace(q.Find("h1").Text())
