@@ -61,7 +61,7 @@ func main() {
 	if err := initAddEvent(c); err != nil {
 		panic(err)
 	}
-	logger.Info("sub add and update success")
+	logger.Info("novel spider is running")
 
 	ch := make(chan int)
 	<-ch

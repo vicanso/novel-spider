@@ -186,17 +186,26 @@ func getNovel(msg *nsq.Message) (n novel.Novel, s *novel.Source, err error) {
 // SubAddNovel sub add novel
 func (mq *MQ) SubAddNovel(cb BasicInfoHandlerCb) (err error) {
 	fn := nsq.HandlerFunc(func(msg *nsq.Message) (err error) {
+		id := msg.ID
+		mq.Logger.Info("add novel event",
+			zap.Any("id", id),
+		)
 		n, _, err := getNovel(msg)
 		if err != nil {
 			return
 		}
 		info, err := n.GetBasicInfo()
-		if err != nil {
+		if err != nil || info == nil {
 			return
 		}
-		if cb != nil && info != nil {
+		if cb != nil {
 			cb(info)
 		}
+		mq.Logger.Info("get novel basic info",
+			zap.Any("id", id),
+			zap.String("name", info.Name),
+			zap.String("author", info.Author),
+		)
 		return
 	})
 	_, err = mq.Sub(TopicAddNovel, ChannelNovel, fn)
@@ -206,17 +215,26 @@ func (mq *MQ) SubAddNovel(cb BasicInfoHandlerCb) (err error) {
 // SubUpdateChapter sub update chapter
 func (mq *MQ) SubUpdateChapter(cb ChaperHandlerCb) (err error) {
 	fn := nsq.HandlerFunc(func(msg *nsq.Message) (err error) {
+		id := msg.ID
+		mq.Logger.Info("update chapter event",
+			zap.Any("id", id),
+		)
 		n, s, err := getNovel(msg)
 		if err != nil {
 			return
 		}
 		chapter, err := n.GetChapter(s.ChapterIndex)
-		if err != nil {
+		if err != nil || chapter == nil {
 			return
 		}
-		if cb != nil && chapter != nil && chapter.Title != "" {
+		if cb != nil && chapter.Title != "" {
 			cb(chapter)
 		}
+		mq.Logger.Info("update chapter event",
+			zap.Any("id", id),
+			zap.String("title", chapter.Title),
+			zap.Int("index", chapter.Index),
+		)
 		return
 	})
 	_, err = mq.Sub(TopicUpdateChapter, ChannelNovel, fn)
@@ -232,6 +250,10 @@ func (mq *MQ) SubReceiveChapter(cb ChaperHandlerCb) (err error) {
 			return
 		}
 		cb(chapter)
+		mq.Logger.Info("receiver chapter event",
+			zap.String("title", chapter.Title),
+			zap.Int("index", chapter.Index),
+		)
 		return
 	})
 	_, err = mq.Sub(TopicChapter, ChannelNovel, fn)
@@ -247,6 +269,10 @@ func (mq *MQ) SubReceiveNovel(cb BasicInfoHandlerCb) (err error) {
 			return
 		}
 		cb(info)
+		mq.Logger.Info("receiver novel event",
+			zap.String("name", info.Name),
+			zap.String("author", info.Author),
+		)
 		return
 	})
 	_, err = mq.Sub(TopicBasicInfo, ChannelNovel, fn)
