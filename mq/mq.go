@@ -236,6 +236,12 @@ func (mq *MQ) SubUpdateChapter(cb ChaperHandlerCb) (err error) {
 		if err != nil || chapter == nil {
 			return
 		}
+		basicInfo, err := n.GetBasicInfo()
+		if err != nil {
+			return
+		}
+		chapter.Name = basicInfo.Name
+		chapter.Author = basicInfo.Author
 		if cb != nil && chapter.Title != "" {
 			cb(chapter)
 		}
