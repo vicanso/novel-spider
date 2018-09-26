@@ -51,8 +51,8 @@ type (
 	Source struct {
 		Category string `json:"category,omitempty"`
 		ID       int    `json:"id,omitempty"`
-		// ChapterIndex chapter index
-		ChapterIndex int `json:"chapterIndex,omitempty"`
+		// LatestChapter latest chapter index
+		LatestChapter int `json:"latestChapter,omitempty"`
 	}
 	// BasicInfoHandlerCb add handler call back function
 	BasicInfoHandlerCb func(info *BasicInfo)

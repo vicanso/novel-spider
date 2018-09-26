@@ -25,11 +25,11 @@ const (
 	// ChannelNovel novel channel
 	ChannelNovel = "novel"
 	// TopicUpdateChapter update chapter topic
-	TopicUpdateChapter = ChannelNovel + "-updateChapter"
+	TopicUpdateChapter = ChannelNovel + "-update-chapter"
 	// TopicAddNovel add topic
 	TopicAddNovel = ChannelNovel + "-add"
 	// TopicBasicInfo basic info
-	TopicBasicInfo = ChannelNovel + "-basicInfo"
+	TopicBasicInfo = ChannelNovel + "-basic-info"
 	// TopicChapter chapter content
 	TopicChapter = ChannelNovel + "-chpater"
 )
@@ -141,7 +141,6 @@ func (mq *MQ) Pub(topic string, v interface{}) (err error) {
 	if err != nil {
 		return
 	}
-
 	url := fmt.Sprintf("http://%s:%d/pub?topic=%s", node.Address, node.HTTPPort, topic)
 	req := getRequest()
 	req.Body = bytes.NewReader(buf)
@@ -232,25 +231,34 @@ func (mq *MQ) SubUpdateChapter(cb ChaperHandlerCb) (err error) {
 		if err != nil {
 			return
 		}
-		chapter, err := n.GetChapter(s.ChapterIndex)
-		if err != nil || chapter == nil {
+		start := s.LatestChapter
+		chapters, err := n.GetChapters()
+		end := len(chapters)
+
+		if err != nil || end <= start {
 			return
 		}
+
 		basicInfo, err := n.GetBasicInfo()
 		if err != nil {
 			return
 		}
-		chapter.Name = basicInfo.Name
-		chapter.Author = basicInfo.Author
-		if cb != nil && chapter.Title != "" {
-			cb(chapter)
+		for i := start; i < end; i++ {
+			chapter, _ := n.GetChapter(i)
+			if chapter != nil {
+				chapter.Name = basicInfo.Name
+				chapter.Author = basicInfo.Author
+				if cb != nil && chapter.Title != "" {
+					cb(chapter)
+				}
+			}
 		}
 
 		if logger != nil {
 			logger.Info("update chapter event",
 				zap.Any("id", id),
-				zap.String("title", chapter.Title),
-				zap.Int("index", chapter.Index),
+				zap.Int("start", start),
+				zap.Int("end", end),
 			)
 		}
 		return
