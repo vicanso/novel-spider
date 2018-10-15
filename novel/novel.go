@@ -8,6 +8,10 @@ import (
 const (
 	// CategoryXBiQuGe xbiquge category
 	CategoryXBiQuGe = "xBiQuGe"
+	// UpdateTypeLatest update latest chapters
+	UpdateTypeLatest = "update-latest"
+	// UpdateTypeCurrent update current chapter
+	UpdateTypeCurrent = "update-current"
 )
 
 var (
@@ -49,10 +53,10 @@ type (
 	}
 	// Source source info
 	Source struct {
-		Category string `json:"category,omitempty"`
-		ID       int    `json:"id,omitempty"`
-		// LatestChapter latest chapter index
-		LatestChapter int `json:"latestChapter,omitempty"`
+		Category   string `json:"category,omitempty"`
+		UpdateType string `json:"updateType,omitempty"`
+		ID         int    `json:"id,omitempty"`
+		Chapter    int    `json:"chapter,omitempty"`
 	}
 	// BasicInfoHandlerCb add handler call back function
 	BasicInfoHandlerCb func(info *BasicInfo)

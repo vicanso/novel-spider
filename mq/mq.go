@@ -231,11 +231,21 @@ func (mq *MQ) SubUpdateChapter(cb ChaperHandlerCb) (err error) {
 		if err != nil {
 			return
 		}
-		start := s.LatestChapter
-		chapters, err := n.GetChapters()
-		end := len(chapters)
+		start := s.Chapter
+		end := -1
+		// 更新数据库中最新章节后的所有章节
+		if s.UpdateType == novel.UpdateTypeLatest {
+			chapters, err := n.GetChapters()
+			if err != nil {
+				return err
+			}
+			end = len(chapters)
+		} else {
+			// 仅更新当前章节
+			end = start + 1
+		}
 
-		if err != nil || end <= start {
+		if end <= start {
 			return
 		}
 
