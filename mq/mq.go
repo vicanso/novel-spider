@@ -253,16 +253,19 @@ func (mq *MQ) SubUpdateChapter(cb ChaperHandlerCb) (err error) {
 		if err != nil {
 			return
 		}
-		for i := start; i < end; i++ {
-			chapter, _ := n.GetChapter(i)
-			if chapter != nil {
-				chapter.Name = basicInfo.Name
-				chapter.Author = basicInfo.Author
-				if cb != nil && chapter.Title != "" {
-					cb(chapter)
+		// 更新章节内容另起goroutine处理，避免处理时间过长，nsq重发
+		go func() {
+			for i := start; i < end; i++ {
+				chapter, _ := n.GetChapter(i)
+				if chapter != nil {
+					chapter.Name = basicInfo.Name
+					chapter.Author = basicInfo.Author
+					if cb != nil && chapter.Title != "" {
+						cb(chapter)
+					}
 				}
 			}
-		}
+		}()
 
 		if logger != nil {
 			logger.Info("update chapter event",
@@ -289,8 +292,11 @@ func (mq *MQ) SubReceiveChapter(cb ChaperHandlerCb) (err error) {
 		cb(chapter)
 		if logger != nil {
 			logger.Info("receiver chapter event",
+				zap.String("author", chapter.Author),
+				zap.String("name", chapter.Name),
 				zap.String("title", chapter.Title),
 				zap.Int("index", chapter.Index),
+				zap.Int("count", len(chapter.Content)),
 			)
 		}
 

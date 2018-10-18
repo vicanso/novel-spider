@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	xBiQuGeHost = "www.xxbiquge.com"
+	xBiQuGeHost = "www.xbiquge6.com"
 )
 
 type (
