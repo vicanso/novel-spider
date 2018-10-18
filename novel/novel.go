@@ -44,12 +44,14 @@ type (
 	}
 	// Chapter 章节信息
 	Chapter struct {
-		Name    string `json:"name,omitempty"`
-		Author  string `json:"author,omitempty"`
-		Index   int    `json:"index,omitempty"`
-		Title   string `json:"title,omitempty"`
-		URL     string `json:"url,omitempty"`
-		Content string `json:"content,omitempty"`
+		SourceID int    `json:"sourceId,omitempty"`
+		Source   string `json:"source,omitempty"`
+		Name     string `json:"name,omitempty"`
+		Author   string `json:"author,omitempty"`
+		Index    int    `json:"index,omitempty"`
+		Title    string `json:"title,omitempty"`
+		URL      string `json:"url,omitempty"`
+		Content  string `json:"content,omitempty"`
 	}
 	// Source source info
 	Source struct {

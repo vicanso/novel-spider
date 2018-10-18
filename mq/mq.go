@@ -260,6 +260,8 @@ func (mq *MQ) SubUpdateChapter(cb ChaperHandlerCb) (err error) {
 				if chapter != nil {
 					chapter.Name = basicInfo.Name
 					chapter.Author = basicInfo.Author
+					chapter.SourceID = basicInfo.SourceID
+					chapter.Source = basicInfo.Source
 					if cb != nil && chapter.Title != "" {
 						cb(chapter)
 					}
