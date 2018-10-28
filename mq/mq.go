@@ -62,7 +62,11 @@ type (
 func getRequest() *request.Request {
 	c := new(http.Client)
 	c.Timeout = defaultTimeout
-	return request.NewRequest(c)
+	req := request.NewRequest(c)
+	req.Headers = map[string]string{
+		"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36",
+	}
+	return req
 }
 
 func getNodes(address string) (nodes []*Node, err error) {
